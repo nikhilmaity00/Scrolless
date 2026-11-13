@@ -25,7 +25,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -84,6 +83,5 @@ class AppForegroundUsageStoreImplTest : BaseTest() {
         override fun localDateNow(): LocalDate = currentDate
         override fun localDateTimeNow(): LocalDateTime = currentDate.atStartOfDay()
         override fun currentTimeInMillis(): Long = 0L
-        override fun systemZoneId(): ZoneId = ZoneId.systemDefault()
     }
 }
