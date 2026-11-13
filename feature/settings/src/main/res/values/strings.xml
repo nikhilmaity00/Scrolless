@@ -52,4 +52,7 @@
     <string name="settings_allow_single_reel_title">Allow one Reel from feed</string>
     <string name="settings_allow_single_reel_description">Watch a Reel opened from your feed, story, or explore, but exit immediately if you scroll to another.</string>
     <string name="settings_allow_single_reel_note">Currently supported on Instagram.</string>
+
+    <string name="settings_instagram_timer_title">Instagram timer &amp; screen dimmer</string>
+    <string name="settings_instagram_timer_description">Show a constant timer overlay and gradually dim the screen as your daily Instagram usage increases.</string>
 </resources>

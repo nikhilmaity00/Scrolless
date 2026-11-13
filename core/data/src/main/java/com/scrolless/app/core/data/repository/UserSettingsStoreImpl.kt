@@ -56,6 +56,7 @@ class UserSettingsStoreImpl @Inject constructor(private val userSettingsDao: Use
     private val _includeStories = MutableStateFlow(false)
     private val _allowVideosSentByDm = MutableStateFlow(false)
     private val _allowSingleReelFromFeed = MutableStateFlow(false)
+    private val _instagramTimerOverlayEnabled = MutableStateFlow(true)
 
     init {
         coroutineScope.launch {
@@ -102,6 +103,9 @@ class UserSettingsStoreImpl @Inject constructor(private val userSettingsDao: Use
         }
         coroutineScope.launch {
             userSettingsDao.getAllowSingleReelFromFeed().collect { _allowSingleReelFromFeed.value = it }
+        }
+        coroutineScope.launch {
+            userSettingsDao.getInstagramTimerOverlayEnabled().collect { _instagramTimerOverlayEnabled.value = it }
         }
     }
 
@@ -211,5 +215,12 @@ class UserSettingsStoreImpl @Inject constructor(private val userSettingsDao: Use
     override suspend fun setReviewPromptLastAttemptAt(timestamp: Long) {
         _reviewPromptLastAttemptAt.value = timestamp
         userSettingsDao.setReviewPromptLastAttemptAt(timestamp)
+    }
+
+    override fun getInstagramTimerOverlayEnabled(): Flow<Boolean> = _instagramTimerOverlayEnabled
+
+    override suspend fun setInstagramTimerOverlayEnabled(enabled: Boolean) {
+        _instagramTimerOverlayEnabled.value = enabled
+        userSettingsDao.setInstagramTimerOverlayEnabled(enabled)
     }
 }

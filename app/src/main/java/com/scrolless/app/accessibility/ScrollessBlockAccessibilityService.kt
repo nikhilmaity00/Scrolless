@@ -38,6 +38,7 @@ import com.scrolless.app.core.repository.SessionTracker
 import com.scrolless.app.core.repository.UserSettingsStore
 import com.scrolless.app.debug.DebugOverlayConfig
 import com.scrolless.app.ui.overlay.BlockedContentOverlayManager
+import com.scrolless.app.ui.overlay.InstagramUsageOverlayManager
 import com.scrolless.app.ui.overlay.TimerOverlayManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -93,6 +94,13 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         super.onCreate()
         timerOverlayManager.attachServiceContext(this)
         blockedContentOverlayManager.attachServiceContext(this)
+        instagramUsageOverlayManager.attachServiceContext(this)
+
+        serviceScope.launch {
+            userSettingsStore.getInstagramTimerOverlayEnabled().collect {
+                instagramUsageOverlayManager.setEnabled(it)
+            }
+        }
 
         if (BuildConfig.DEBUG) {
             serviceScope.launch {
@@ -135,6 +143,10 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     /** Manages the blocker overlay placed directly over distracting video players. */
     @Inject
     lateinit var blockedContentOverlayManager: BlockedContentOverlayManager
+
+    /** Manages constant timer and progressive screen dimming overlay for Instagram. */
+    @Inject
+    lateinit var instagramUsageOverlayManager: InstagramUsageOverlayManager
 
     private val powerManager by lazy { getSystemService(POWER_SERVICE) as PowerManager }
 
@@ -414,6 +426,10 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         }
     }
 
+    private fun isInstagramApp(app: ResolvedBlockableApp?): Boolean {
+        return app?.packageId == "com.instagram.android" || app?.packageId == "com.instagram.lite"
+    }
+
     /** Records when the user opens or leaves a monitored app and adjusts tracking accordingly. */
     private fun updateForegroundAppState(nextApp: ResolvedBlockableApp?) {
         val previousApp = currentForegroundBrainRotApp
@@ -422,6 +438,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         if (previousApp != null) {
             Timber.v("*** User appears to have left a brain rot app: %s (%s)", previousApp.app.name, previousApp.packageId)
             sessionTracker.onAppClose()
+            if (isInstagramApp(previousApp) && !isInstagramApp(nextApp)) {
+                instagramUsageOverlayManager.onInstagramExited(previousApp.packageId)
+            }
             // When exiting to an unmonitored screen (e.g. launcher or home), reset the saved activity
             if (nextApp == null && currentActivity?.packageName == previousApp.packageId) {
                 currentActivity = null
@@ -431,6 +450,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         if (nextApp != null) {
             Timber.v("**** User appears to have entered a brain rot app: %s (%s)", nextApp.app.name, nextApp.packageId)
             sessionTracker.onAppOpen(nextApp.app)
+            if (isInstagramApp(nextApp) && !isInstagramApp(previousApp)) {
+                instagramUsageOverlayManager.onInstagramEntered(nextApp.packageId)
+            }
         }
 
         currentForegroundBrainRotApp = nextApp
@@ -452,6 +474,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         mainHandler.removeCallbacks(coveredContentCheck)
         blockedContentOverlayManager.hide()
         timerOverlayManager.cleanup()
+        instagramUsageOverlayManager.cleanup()
         serviceScope.cancel()
     }
 
@@ -545,6 +568,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
     private fun showTimerOverlayIfEnabled(session: ContentSession, config: BlockingConfig, dailyUsageMillis: Long) {
         // Reads can finish after navigation. Only show the timer for the same viewing session.
         if (!currentTimerOverlayEnabled || viewingSession !== session) return
+        if (isInstagramApp(session.app) && instagramUsageOverlayManager.isShowing()) return
 
         Timber.v("Showing timer overlay")
         // This coroutine already runs on the main thread, so no Handler post is needed.

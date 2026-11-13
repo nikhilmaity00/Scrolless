@@ -58,6 +58,7 @@ data class UserSettingsEntity(
     @ColumnInfo(name = "include_stories", defaultValue = "0") val includeStories: Boolean = false,
     @ColumnInfo(name = "except_reels_sent_by_dm", defaultValue = "0") val allowVideosSentByDm: Boolean = false,
     @ColumnInfo(name = "allow_single_reel_from_feed", defaultValue = "0") val allowSingleReelFromFeed: Boolean = false,
+    @ColumnInfo(name = "instagram_timer_overlay_enabled", defaultValue = "1") val instagramTimerOverlayEnabled: Boolean = true,
     @ColumnInfo(name = "has_seen_background_setup", defaultValue = "0") val hasSeenBackgroundSetup: Boolean = false,
 )
 

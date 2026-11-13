@@ -153,4 +153,10 @@ abstract class UserSettingsDao : BaseDao<UserSettingsEntity> {
 
     @Query("UPDATE user_settings SET allow_single_reel_from_feed = :enabled WHERE id = 1")
     abstract suspend fun setAllowSingleReelFromFeed(enabled: Boolean)
+
+    @Query("SELECT instagram_timer_overlay_enabled FROM user_settings WHERE id = 1")
+    abstract fun getInstagramTimerOverlayEnabled(): Flow<Boolean>
+
+    @Query("UPDATE user_settings SET instagram_timer_overlay_enabled = :enabled WHERE id = 1")
+    abstract suspend fun setInstagramTimerOverlayEnabled(enabled: Boolean)
 }

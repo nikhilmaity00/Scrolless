@@ -55,6 +55,9 @@ interface UserSettingsStore {
     fun getAllowSingleReelFromFeed(): Flow<Boolean>
     suspend fun setAllowSingleReelFromFeed(enabled: Boolean)
 
+    fun getInstagramTimerOverlayEnabled(): Flow<Boolean>
+    suspend fun setInstagramTimerOverlayEnabled(enabled: Boolean)
+
     fun getFirstLaunchAt(): Flow<Long>
     fun getFirstLaunchDate(): Flow<LocalDate?>
 

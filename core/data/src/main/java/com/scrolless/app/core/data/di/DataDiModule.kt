@@ -37,12 +37,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.scrolless.app.core.blocking.time.SystemTimeProvider
 import com.scrolless.app.core.blocking.time.TimeProvider
 import com.scrolless.app.core.data.database.ScrollessDatabase
+import com.scrolless.app.core.data.database.dao.AppForegroundUsageDao
 import com.scrolless.app.core.data.database.dao.SessionSegmentDao
 import com.scrolless.app.core.data.database.dao.UserSettingsDao
+import com.scrolless.app.core.data.repository.AppForegroundUsageStoreImpl
 import com.scrolless.app.core.data.repository.BlockingConfigRepositoryImpl
 import com.scrolless.app.core.data.repository.SessionSegmentStoreImpl
 import com.scrolless.app.core.data.repository.SessionTrackerImpl
 import com.scrolless.app.core.data.repository.UserSettingsStoreImpl
+import com.scrolless.app.core.repository.AppForegroundUsageStore
 import com.scrolless.app.core.repository.BlockingConfigRepository
 import com.scrolless.app.core.repository.SessionSegmentStore
 import com.scrolless.app.core.repository.SessionTracker
@@ -73,6 +76,7 @@ object DataDiModule {
                 ScrollessDatabase.MIGRATION_10_11,
                 ScrollessDatabase.MIGRATION_11_12,
                 ScrollessDatabase.MIGRATION_12_13,
+                ScrollessDatabase.MIGRATION_13_14,
             ).fallbackToDestructiveMigration(true) // Not recommended but for now it shouldn't matter
             .fallbackToDestructiveMigrationOnDowngrade(true).addCallback(
                 object : RoomDatabase.Callback() {
@@ -120,6 +124,20 @@ object DataDiModule {
     @Singleton
     fun provideSessionSegmentStore(timeProvider: TimeProvider, sessionSegmentDao: SessionSegmentDao): SessionSegmentStore =
         SessionSegmentStoreImpl(timeProvider = timeProvider, sessionSegmentDao = sessionSegmentDao)
+
+    @Provides
+    @Singleton
+    fun provideAppForegroundUsageDao(database: ScrollessDatabase): AppForegroundUsageDao = database.appForegroundUsageDao()
+
+    @Provides
+    @Singleton
+    fun provideAppForegroundUsageStore(
+        timeProvider: TimeProvider,
+        appForegroundUsageDao: AppForegroundUsageDao,
+    ): AppForegroundUsageStore = AppForegroundUsageStoreImpl(
+        timeProvider = timeProvider,
+        appForegroundUsageDao = appForegroundUsageDao,
+    )
 
     @Provides
     @Singleton

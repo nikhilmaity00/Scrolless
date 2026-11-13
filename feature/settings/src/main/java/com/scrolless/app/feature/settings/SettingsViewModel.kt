@@ -31,18 +31,22 @@ import kotlinx.coroutines.launch
 class SettingsViewModel @Inject constructor(private val userSettingsStore: UserSettingsStore) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = combine(
-        userSettingsStore.getPauseDuration(),
-        userSettingsStore.getAllowVideosSentByDm(),
-        userSettingsStore.getTimerOverlayEnabled(),
+        combine(
+            userSettingsStore.getPauseDuration(),
+            userSettingsStore.getAllowVideosSentByDm(),
+            userSettingsStore.getTimerOverlayEnabled(),
+        ) { pause, dm, timer -> Triple(pause, dm, timer) },
         userSettingsStore.getIncludeStories(),
         userSettingsStore.getAllowSingleReelFromFeed(),
-    ) { pauseDurationMillis, allowVideosSentByDm, timerOverlayEnabled, includeStories, allowSingleReelFromFeed ->
+        userSettingsStore.getInstagramTimerOverlayEnabled(),
+    ) { (pauseDurationMillis, allowVideosSentByDm, timerOverlayEnabled), includeStories, allowSingleReelFromFeed, instagramTimerOverlayEnabled ->
         SettingsUiState(
             pauseDurationMinutes = (pauseDurationMillis / 60_000L).toInt().coerceIn(1, 60),
             allowVideosSentByDm = allowVideosSentByDm,
             timerOverlayEnabled = timerOverlayEnabled,
             includeStories = includeStories,
             allowSingleReelFromFeed = allowSingleReelFromFeed,
+            instagramTimerOverlayEnabled = instagramTimerOverlayEnabled,
         )
     }
         .stateIn(
@@ -80,6 +84,12 @@ class SettingsViewModel @Inject constructor(private val userSettingsStore: UserS
             userSettingsStore.setTimerOverlayToggle(checked)
         }
     }
+
+    fun onInstagramTimerOverlayEnabledChange(enabled: Boolean) {
+        viewModelScope.launch {
+            userSettingsStore.setInstagramTimerOverlayEnabled(enabled)
+        }
+    }
 }
 
 data class SettingsUiState(
@@ -88,4 +98,5 @@ data class SettingsUiState(
     val allowVideosSentByDm: Boolean = false,
     val timerOverlayEnabled: Boolean = true,
     val allowSingleReelFromFeed: Boolean = false,
+    val instagramTimerOverlayEnabled: Boolean = true,
 )

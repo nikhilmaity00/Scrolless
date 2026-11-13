@@ -21,8 +21,10 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.scrolless.app.core.data.database.dao.AppForegroundUsageDao
 import com.scrolless.app.core.data.database.dao.SessionSegmentDao
 import com.scrolless.app.core.data.database.dao.UserSettingsDao
+import com.scrolless.app.core.data.database.model.AppForegroundUsageEntity
 import com.scrolless.app.core.data.database.model.SessionSegmentEntity
 import com.scrolless.app.core.data.database.model.UserSettingsEntity
 
@@ -33,8 +35,9 @@ import com.scrolless.app.core.data.database.model.UserSettingsEntity
     entities = [
         UserSettingsEntity::class,
         SessionSegmentEntity::class,
+        AppForegroundUsageEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = false,
 )
 @TypeConverters(LocalDateTypeConverters::class, BlockableAppTypeConverters::class, LocalDateTimeTypeConverters::class)
@@ -42,6 +45,8 @@ abstract class ScrollessDatabase : RoomDatabase() {
     abstract fun userSettingsDao(): UserSettingsDao
 
     abstract fun sessionSegmentDao(): SessionSegmentDao
+
+    abstract fun appForegroundUsageDao(): AppForegroundUsageDao
 
     companion object {
         val MIGRATION_2_3 = object : Migration(2, 3) {
@@ -318,6 +323,21 @@ abstract class ScrollessDatabase : RoomDatabase() {
         val MIGRATION_12_13 = object : Migration(12, 13) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE user_settings ADD COLUMN allow_single_reel_from_feed INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS app_foreground_usage (
+                        packageName TEXT NOT NULL,
+                        date TEXT NOT NULL,
+                        durationMillis INTEGER NOT NULL,
+                        PRIMARY KEY(packageName, date)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("ALTER TABLE user_settings ADD COLUMN instagram_timer_overlay_enabled INTEGER NOT NULL DEFAULT 1")
             }
         }
     }

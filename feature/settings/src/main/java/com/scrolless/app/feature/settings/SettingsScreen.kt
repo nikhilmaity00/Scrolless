@@ -83,6 +83,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit, vi
         onAllowVideosSentByDmChange = viewModel::onAllowVideosSentByDmChange,
         onAllowSingleReelFromFeedChange = viewModel::onAllowSingleReelFromFeedChange,
         onTimerOverlayEnabledChange = viewModel::onTimerOverlayEnabledChange,
+        onInstagramTimerOverlayEnabledChange = viewModel::onInstagramTimerOverlayEnabledChange,
         onIncludeStoriesChange = viewModel::onIncludeStoriesChange,
         onNavigateBack = onNavigateBack,
     )
@@ -97,6 +98,7 @@ private fun SettingsScreenContent(
     onAllowVideosSentByDmChange: (Boolean) -> Unit,
     onAllowSingleReelFromFeedChange: (Boolean) -> Unit,
     onTimerOverlayEnabledChange: (Boolean) -> Unit,
+    onInstagramTimerOverlayEnabledChange: (Boolean) -> Unit,
     onIncludeStoriesChange: (Boolean) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -202,6 +204,13 @@ private fun SettingsScreenContent(
                 TimerOverlayItem(
                     checked = uiState.timerOverlayEnabled,
                     onCheckedChange = onTimerOverlayEnabledChange,
+                )
+
+                SettingsDivider()
+
+                InstagramTimerOverlayItem(
+                    checked = uiState.instagramTimerOverlayEnabled,
+                    onCheckedChange = onInstagramTimerOverlayEnabledChange,
                 )
             }
         }
@@ -358,6 +367,17 @@ private fun TimerOverlayItem(checked: Boolean, onCheckedChange: (Boolean) -> Uni
     )
 }
 
+@Composable
+private fun InstagramTimerOverlayItem(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    SettingsSwitchItem(
+        title = stringResource(R.string.settings_instagram_timer_title),
+        description = stringResource(R.string.settings_instagram_timer_description),
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+    )
+}
+
 /** Shows a toggle with its description and an optional smaller note for feature limitations. */
 @Composable
 private fun SettingsSwitchItem(
@@ -428,6 +448,7 @@ private fun SettingsScreenPreview() {
             onAllowVideosSentByDmChange = {},
             onAllowSingleReelFromFeedChange = {},
             onTimerOverlayEnabledChange = {},
+            onInstagramTimerOverlayEnabledChange = {},
             onIncludeStoriesChange = {},
         )
     }
