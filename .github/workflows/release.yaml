@@ -1,13 +1,6 @@
-name: Release
+name: Play Store Release
 
 on:
-  workflow_run:
-    workflows:
-      - Build
-    types:
-      - completed
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       track:
@@ -27,11 +20,7 @@ concurrency:
 jobs:
   release:
     name: Build and release with Fastlane
-    if: >-
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push') ||
-      (github.event_name == 'workflow_dispatch' && inputs.track == 'internal')
+    if: github.event_name == 'workflow_dispatch' && inputs.track == 'internal'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: internal
