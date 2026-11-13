@@ -1,13 +1,8 @@
 name: Auto-translate strings.xml
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '**/values/strings.xml'
   workflow_dispatch:
-    
+
 permissions:
   contents: write
   pull-requests: write
@@ -20,7 +15,6 @@ jobs:
   perform-auto-translate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: ${{ secrets.OPENROUTER_API_KEY != '' }}
 
     steps:
       - name: Checkout Repository
