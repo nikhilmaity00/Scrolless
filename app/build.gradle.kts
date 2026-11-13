@@ -92,19 +92,25 @@ android {
         project.providers.environmentVariable("ANDROID_RELEASE_KEY_PASSWORD")
             .orNull
 
+    val fallbackKeystore = file("keystore/release.jks")
+    val effectiveKeystorePath =
+        if (!releaseKeystorePath.isNullOrBlank()) {
+            releaseKeystorePath
+        } else if (fallbackKeystore.exists()) {
+            fallbackKeystore.absolutePath
+        } else {
+            null
+        }
+
     signingConfigs {
         create("release") {
-            if (!releaseKeystorePath.isNullOrBlank()) {
-                storeFile = file(releaseKeystorePath)
-            }
-            if (!releaseStorePassword.isNullOrBlank()) {
-                storePassword = releaseStorePassword
-            }
-            if (!releaseKeyAlias.isNullOrBlank()) {
-                keyAlias = releaseKeyAlias
-            }
-            if (!releaseKeyPassword.isNullOrBlank()) {
-                keyPassword = releaseKeyPassword
+            if (!effectiveKeystorePath.isNullOrBlank()) {
+                storeFile = file(effectiveKeystorePath)
+                storePassword = releaseStorePassword ?: "scrolless"
+                keyAlias = releaseKeyAlias ?: "scrolless"
+                keyPassword = releaseKeyPassword ?: "scrolless"
+                enableV1Signing = true
+                enableV2Signing = true
             }
         }
     }
