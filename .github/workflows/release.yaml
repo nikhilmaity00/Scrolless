@@ -23,7 +23,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.track == 'internal'
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    environment: internal
 
     permissions:
       contents: write
@@ -151,7 +150,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.track == 'production'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: production
 
     permissions:
       contents: read

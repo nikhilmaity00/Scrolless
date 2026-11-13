@@ -39,7 +39,12 @@ class SettingsViewModel @Inject constructor(private val userSettingsStore: UserS
         userSettingsStore.getIncludeStories(),
         userSettingsStore.getAllowSingleReelFromFeed(),
         userSettingsStore.getInstagramTimerOverlayEnabled(),
-    ) { (pauseDurationMillis, allowVideosSentByDm, timerOverlayEnabled), includeStories, allowSingleReelFromFeed, instagramTimerOverlayEnabled ->
+    ) {
+            (pauseDurationMillis, allowVideosSentByDm, timerOverlayEnabled),
+            includeStories,
+            allowSingleReelFromFeed,
+            instagramTimerOverlayEnabled,
+        ->
         SettingsUiState(
             pauseDurationMinutes = (pauseDurationMillis / 60_000L).toInt().coerceIn(1, 60),
             allowVideosSentByDm = allowVideosSentByDm,

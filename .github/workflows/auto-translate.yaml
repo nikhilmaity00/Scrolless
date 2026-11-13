@@ -20,6 +20,7 @@ jobs:
   perform-auto-translate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: ${{ secrets.OPENROUTER_API_KEY != '' }}
 
     steps:
       - name: Checkout Repository

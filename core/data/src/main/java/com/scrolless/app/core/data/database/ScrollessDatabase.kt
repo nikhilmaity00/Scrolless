@@ -335,7 +335,7 @@ abstract class ScrollessDatabase : RoomDatabase() {
                         durationMillis INTEGER NOT NULL,
                         PRIMARY KEY(packageName, date)
                     )
-                    """.trimIndent()
+                    """.trimIndent(),
                 )
                 db.execSQL("ALTER TABLE user_settings ADD COLUMN instagram_timer_overlay_enabled INTEGER NOT NULL DEFAULT 1")
             }

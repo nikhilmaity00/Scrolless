@@ -25,8 +25,4 @@ import java.time.LocalDate
     primaryKeys = ["packageName", "date"],
 )
 @Immutable
-data class AppForegroundUsageEntity(
-    val packageName: String,
-    val date: LocalDate,
-    val durationMillis: Long,
-)
+data class AppForegroundUsageEntity(val packageName: String, val date: LocalDate, val durationMillis: Long)
