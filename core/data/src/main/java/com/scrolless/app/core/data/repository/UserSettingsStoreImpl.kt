@@ -55,6 +55,7 @@ class UserSettingsStoreImpl @Inject constructor(private val userSettingsDao: Use
     private val _pauseDuration = MutableStateFlow(5 * 60 * 1000L)
     private val _includeStories = MutableStateFlow(false)
     private val _allowVideosSentByDm = MutableStateFlow(false)
+    private val _allowSingleReelFromFeed = MutableStateFlow(false)
 
     init {
         coroutineScope.launch {
@@ -98,6 +99,9 @@ class UserSettingsStoreImpl @Inject constructor(private val userSettingsDao: Use
         }
         coroutineScope.launch {
             userSettingsDao.getAllowVideosSentByDm().collect { _allowVideosSentByDm.value = it }
+        }
+        coroutineScope.launch {
+            userSettingsDao.getAllowSingleReelFromFeed().collect { _allowSingleReelFromFeed.value = it }
         }
     }
 
@@ -162,6 +166,13 @@ class UserSettingsStoreImpl @Inject constructor(private val userSettingsDao: Use
     override suspend fun setAllowVideosSentByDm(checked: Boolean) {
         _allowVideosSentByDm.value = checked
         userSettingsDao.setAllowVideosSentByDm(checked)
+    }
+
+    override fun getAllowSingleReelFromFeed(): Flow<Boolean> = _allowSingleReelFromFeed
+
+    override suspend fun setAllowSingleReelFromFeed(enabled: Boolean) {
+        _allowSingleReelFromFeed.value = enabled
+        userSettingsDao.setAllowSingleReelFromFeed(enabled)
     }
 
     override fun getIncludeStories(): Flow<Boolean> = _includeStories

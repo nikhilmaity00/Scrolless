@@ -48,4 +48,8 @@
     <string name="settings_include_stories_title">Include Stories</string>
     <string name="settings_include_stories_description">Count time spent viewing Stories and apply your current blocking mode and limits.</string>
     <string name="settings_include_stories_note">Currently supported on Instagram, Snapchat, and Facebook.</string>
+
+    <string name="settings_allow_single_reel_title">Allow one Reel from feed</string>
+    <string name="settings_allow_single_reel_description">Watch a Reel opened from your feed, story, or explore, but exit immediately if you scroll to another.</string>
+    <string name="settings_allow_single_reel_note">Currently supported on Instagram.</string>
 </resources>

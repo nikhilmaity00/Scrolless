@@ -149,6 +149,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
             allowVideosSentByDm = { currentAllowVideosSentByDm },
             includeStories = { currentIncludeStories },
             currentActivity = { currentActivity },
+            allowSingleReelFromFeed = { currentAllowSingleReelFromFeed },
         )
     }
 
@@ -170,6 +171,9 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
 
     /** Whether videos received in direct messages are exempt from blocking. */
     private var currentAllowVideosSentByDm: Boolean = false
+
+    /** Whether watching a single Reel opened from feed is allowed. */
+    private var currentAllowSingleReelFromFeed: Boolean = false
 
     /** Timestamp until which blocking is temporarily paused. */
     @Volatile
@@ -292,6 +296,14 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
         serviceScope.launch {
             userSettingsStore.getIncludeStories().collect {
                 currentIncludeStories = it
+                refreshDetectedContent()
+                reconsiderVisibleContent()
+            }
+        }
+
+        serviceScope.launch {
+            userSettingsStore.getAllowSingleReelFromFeed().collect {
+                currentAllowSingleReelFromFeed = it
                 refreshDetectedContent()
                 reconsiderVisibleContent()
             }
@@ -557,6 +569,7 @@ class ScrollessBlockAccessibilityService : AccessibilityService() {
      * @param appLeft True if the user switched away from the host app entirely.
      */
     private fun onBlockedContentExited(appLeft: Boolean = false) {
+        contentScanner.resetSingleReelTracking()
         val session = contentSession
         contentSession = null
         val hadCover = session?.content?.cover != null

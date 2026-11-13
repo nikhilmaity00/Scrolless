@@ -43,7 +43,13 @@ internal class ContentScanner(
     private val allowVideosSentByDm: () -> Boolean,
     private val includeStories: () -> Boolean,
     private val currentActivity: () -> ComponentName? = { null },
+    private val allowSingleReelFromFeed: () -> Boolean = { false },
 ) {
+    internal val singleReelTracker = SingleReelTracker()
+
+    fun resetSingleReelTracking() {
+        singleReelTracker.reset()
+    }
     @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private val useWindowAttachedCover
         get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && windowAttachedCover()
@@ -320,15 +326,123 @@ internal class ContentScanner(
     }
 
     /**
-     * Checks whether the user's DM allowance applies to this screen.
-     * Skips layout checks when that setting is off or the app has no DM rule, so ordinary blocking
+     * Checks whether the user's DM allowance or single-Reel feed allowance applies to this screen.
+     * Skips layout checks when those settings are off, so ordinary blocking
      * remains unchanged. [cover] supplies player bounds only for rules that check a reply's position.
      */
     private fun AccessibilityNodeInfo.shouldSuppressBlocking(blockableApp: ResolvedBlockableApp, cover: ContentCover?): Boolean {
-        // Only check layout rules if the user explicitly enabled DM video allowance in settings.
-        if (!allowVideosSentByDm()) return false
-        val rule = blockableApp.dmExemptionRule ?: return false
-        return isVideoSentInDm(blockableApp, rule, cover)
+        if (allowVideosSentByDm()) {
+            val rule = blockableApp.dmExemptionRule
+            if (rule != null && isVideoSentInDm(blockableApp, rule, cover)) {
+                return true
+            }
+        }
+
+        if (allowSingleReelFromFeed() && blockableApp.app == BlockableApp.REELS) {
+            if (isSingleReelAllowed(blockableApp)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private fun AccessibilityNodeInfo.isSingleReelAllowed(blockableApp: ResolvedBlockableApp): Boolean {
+        val hasBack = hasBackButton(blockableApp)
+        val author = findReelAuthor(blockableApp)
+        val caption = findReelCaption(blockableApp)
+        return singleReelTracker.evaluateAllowance(hasBack, author, caption)
+    }
+
+    private fun AccessibilityNodeInfo.hasBackButton(blockableApp: ResolvedBlockableApp): Boolean {
+        val backIds = listOf(
+            "clips_action_bar_start_action_buttons",
+            "action_bar_button_back",
+            "action_bar_left_button",
+            "back_button",
+        )
+        if (backIds.any { hasVisibleViewId(blockableApp.getViewId(it)) }) return true
+        if (hasVisibleViewId("android:id/up")) return true
+
+        return hasBackActionNode()
+    }
+
+    private fun AccessibilityNodeInfo.hasBackActionNode(): Boolean {
+        fun check(node: AccessibilityNodeInfo): Boolean {
+            val desc = node.contentDescription?.toString()
+            val text = node.text?.toString()
+            if (desc?.equals("Back", ignoreCase = true) == true ||
+                desc?.equals("Navigate up", ignoreCase = true) == true ||
+                text?.equals("Back", ignoreCase = true) == true
+            ) {
+                if (isNodeVisibleToTheUser(node)) return true
+            }
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                if (check(child)) return true
+            }
+            return false
+        }
+        return check(this)
+    }
+
+    private fun AccessibilityNodeInfo.findReelAuthor(blockableApp: ResolvedBlockableApp): String? {
+        val authorIds = listOf(
+            "clips_author_username",
+            "clips_author_name",
+            "row_feed_photo_profile_name",
+            "reel_viewer_title",
+        )
+        val author = findFirstVisibleTextOrDescendant(blockableApp, authorIds)
+        if (author != null) return author
+
+        val containerIds = listOf("clips_video_container", "clips_media_component")
+        for (id in containerIds) {
+            val nodes = findAccessibilityNodeInfosByViewId(blockableApp.getViewId(id))
+            val desc = nodes.firstOrNull(::isNodeVisibleToTheUser)?.contentDescription?.toString()
+            if (desc != null && desc.startsWith("Reel by ", ignoreCase = true)) {
+                val extracted = desc.substringAfter("Reel by ").substringBefore(".").trim()
+                if (extracted.isNotBlank()) return extracted
+            }
+        }
+        return null
+    }
+
+    private fun AccessibilityNodeInfo.findReelCaption(blockableApp: ResolvedBlockableApp): String? {
+        val captionIds = listOf(
+            "clips_caption_component",
+            "row_feed_comment_textview_layout",
+            "reel_viewer_subtitle",
+            "clips_caption",
+        )
+        return findFirstVisibleTextOrDescendant(blockableApp, captionIds)
+    }
+
+    private fun AccessibilityNodeInfo.findFirstVisibleTextOrDescendant(
+        blockableApp: ResolvedBlockableApp,
+        viewIds: List<String>,
+    ): String? {
+        for (id in viewIds) {
+            val nodes = findAccessibilityNodeInfosByViewId(blockableApp.getViewId(id))
+            for (node in nodes) {
+                if (isNodeVisibleToTheUser(node)) {
+                    val text = node.extractVisibleText()
+                    if (text != null) return text
+                }
+            }
+        }
+        return null
+    }
+
+    private fun AccessibilityNodeInfo.extractVisibleText(): String? {
+        text?.toString()?.takeIf { it.isNotBlank() }?.let { return it }
+        contentDescription?.toString()?.takeIf { it.isNotBlank() }?.let { return it }
+        for (i in 0 until childCount) {
+            val child = getChild(i) ?: continue
+            val childText = child.extractVisibleText()
+            if (childText != null) return childText
+        }
+        return null
     }
 
     /**

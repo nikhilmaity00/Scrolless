@@ -73,6 +73,61 @@ internal fun AccessibilityService.showTestWindow(
     }
 }
 
+internal fun AccessibilityService.showTestHierarchy(packageId: String, configure: (AccessibilityNodeInfo) -> Unit) {
+    val root = if (Build.VERSION.SDK_INT >= 33) {
+        AccessibilityNodeInfo()
+    } else {
+        @Suppress("DEPRECATION")
+        AccessibilityNodeInfo.obtain()
+    }
+    root.apply {
+        setSource(android.view.View(this@showTestHierarchy))
+        packageName = packageId
+        isVisibleToUser = true
+        setBoundsInScreen(Rect(0, 0, 1080, 2400))
+    }
+    configure(root)
+    val window = AccessibilityWindowInfo.obtain()
+    shadowOf(window).apply {
+        setId(1)
+        setRoot(root)
+        setType(AccessibilityWindowInfo.TYPE_APPLICATION)
+        setActive(true)
+        setFocused(true)
+    }
+    shadowOf(root).setAccessibilityWindowInfo(window)
+    shadowOf(this).apply {
+        setRootInActiveWindow(root)
+        setWindows(listOf(window))
+    }
+}
+
+internal fun createTestChildNode(
+    service: AccessibilityService,
+    packageId: String,
+    viewId: String? = null,
+    text: String? = null,
+    contentDescription: String? = null,
+    visible: Boolean = true,
+): AccessibilityNodeInfo {
+    val node = if (Build.VERSION.SDK_INT >= 33) {
+        AccessibilityNodeInfo()
+    } else {
+        @Suppress("DEPRECATION")
+        AccessibilityNodeInfo.obtain()
+    }
+    node.apply {
+        setSource(android.view.View(service))
+        packageName = packageId
+        viewIdResourceName = viewId?.let { "$packageId:id/$it" }
+        if (text != null) this.text = text
+        if (contentDescription != null) this.contentDescription = contentDescription
+        isVisibleToUser = visible
+        setBoundsInScreen(Rect(0, 0, 1080, 200))
+    }
+    return node
+}
+
 class TestAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) = Unit
     override fun onInterrupt() = Unit
@@ -88,6 +143,15 @@ class IndexedTestNode : ShadowAccessibilityNodeInfo() {
 
     @Suppress("unused")
     @Implementation
-    fun findAccessibilityNodeInfosByViewId(viewId: String): List<AccessibilityNodeInfo> =
-        if (node.viewIdResourceName == viewId) listOf(node) else emptyList()
+    fun findAccessibilityNodeInfosByViewId(viewId: String): List<AccessibilityNodeInfo> {
+        val matches = mutableListOf<AccessibilityNodeInfo>()
+        fun search(n: AccessibilityNodeInfo) {
+            if (n.viewIdResourceName == viewId) matches.add(n)
+            for (i in 0 until n.childCount) {
+                n.getChild(i)?.let { search(it) }
+            }
+        }
+        search(node)
+        return matches
+    }
 }

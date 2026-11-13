@@ -81,6 +81,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit, vi
         uiState = uiState,
         onPauseDurationChange = viewModel::onPauseDurationChange,
         onAllowVideosSentByDmChange = viewModel::onAllowVideosSentByDmChange,
+        onAllowSingleReelFromFeedChange = viewModel::onAllowSingleReelFromFeedChange,
         onTimerOverlayEnabledChange = viewModel::onTimerOverlayEnabledChange,
         onIncludeStoriesChange = viewModel::onIncludeStoriesChange,
         onNavigateBack = onNavigateBack,
@@ -94,6 +95,7 @@ private fun SettingsScreenContent(
     uiState: SettingsUiState,
     onPauseDurationChange: (Int) -> Unit,
     onAllowVideosSentByDmChange: (Boolean) -> Unit,
+    onAllowSingleReelFromFeedChange: (Boolean) -> Unit,
     onTimerOverlayEnabledChange: (Boolean) -> Unit,
     onIncludeStoriesChange: (Boolean) -> Unit,
     onNavigateBack: () -> Unit,
@@ -176,6 +178,13 @@ private fun SettingsScreenContent(
                 AllowVideosSentByDmItem(
                     checked = uiState.allowVideosSentByDm,
                     onCheckedChange = onAllowVideosSentByDmChange,
+                )
+
+                SettingsDivider()
+
+                AllowSingleReelFromFeedItem(
+                    checked = uiState.allowSingleReelFromFeed,
+                    onCheckedChange = onAllowSingleReelFromFeedChange,
                 )
 
                 SettingsDivider()
@@ -327,6 +336,18 @@ private fun AllowVideosSentByDmItem(checked: Boolean, onCheckedChange: (Boolean)
 }
 
 @Composable
+private fun AllowSingleReelFromFeedItem(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    SettingsSwitchItem(
+        title = stringResource(R.string.settings_allow_single_reel_title),
+        description = stringResource(R.string.settings_allow_single_reel_description),
+        note = stringResource(R.string.settings_allow_single_reel_note),
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+    )
+}
+
+@Composable
 private fun TimerOverlayItem(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     SettingsSwitchItem(
         title = stringResource(R.string.settings_show_onscreen_timer_title),
@@ -405,6 +426,7 @@ private fun SettingsScreenPreview() {
             onPauseDurationChange = {},
             onNavigateBack = {},
             onAllowVideosSentByDmChange = {},
+            onAllowSingleReelFromFeedChange = {},
             onTimerOverlayEnabledChange = {},
             onIncludeStoriesChange = {},
         )

@@ -147,4 +147,10 @@ abstract class UserSettingsDao : BaseDao<UserSettingsEntity> {
 
     @Query("UPDATE user_settings SET except_reels_sent_by_dm = :checked WHERE id = 1")
     abstract suspend fun setAllowVideosSentByDm(checked: Boolean)
+
+    @Query("SELECT allow_single_reel_from_feed FROM user_settings WHERE id = 1")
+    abstract fun getAllowSingleReelFromFeed(): Flow<Boolean>
+
+    @Query("UPDATE user_settings SET allow_single_reel_from_feed = :enabled WHERE id = 1")
+    abstract suspend fun setAllowSingleReelFromFeed(enabled: Boolean)
 }

@@ -35,12 +35,14 @@ class SettingsViewModel @Inject constructor(private val userSettingsStore: UserS
         userSettingsStore.getAllowVideosSentByDm(),
         userSettingsStore.getTimerOverlayEnabled(),
         userSettingsStore.getIncludeStories(),
-    ) { pauseDurationMillis, allowVideosSentByDm, timerOverlayEnabled, includeStories ->
+        userSettingsStore.getAllowSingleReelFromFeed(),
+    ) { pauseDurationMillis, allowVideosSentByDm, timerOverlayEnabled, includeStories, allowSingleReelFromFeed ->
         SettingsUiState(
             pauseDurationMinutes = (pauseDurationMillis / 60_000L).toInt().coerceIn(1, 60),
             allowVideosSentByDm = allowVideosSentByDm,
             timerOverlayEnabled = timerOverlayEnabled,
             includeStories = includeStories,
+            allowSingleReelFromFeed = allowSingleReelFromFeed,
         )
     }
         .stateIn(
@@ -67,6 +69,12 @@ class SettingsViewModel @Inject constructor(private val userSettingsStore: UserS
         }
     }
 
+    fun onAllowSingleReelFromFeedChange(enabled: Boolean) {
+        viewModelScope.launch {
+            userSettingsStore.setAllowSingleReelFromFeed(enabled)
+        }
+    }
+
     fun onTimerOverlayEnabledChange(checked: Boolean) {
         viewModelScope.launch {
             userSettingsStore.setTimerOverlayToggle(checked)
@@ -79,4 +87,5 @@ data class SettingsUiState(
     val pauseDurationMinutes: Int = 5,
     val allowVideosSentByDm: Boolean = false,
     val timerOverlayEnabled: Boolean = true,
+    val allowSingleReelFromFeed: Boolean = false,
 )
